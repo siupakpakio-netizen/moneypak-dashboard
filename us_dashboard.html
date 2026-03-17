@@ -49,7 +49,7 @@ canvas{max-height:260px}
 </div>
 <div class="hdr">
   <h1>🇺🇸 MoneyPak 美股模擬交易</h1>
-  <div class="sub">US Market | 本金 USD 30,000 | <span id="date">載入中...</span></div>
+  <div class="sub">US Market | 本金 HKD 30,000 (≈USD 3,870) | <span id="date">載入中...</span></div>
   <div class="pnl" id="pnl">載入中...</div>
   <div style="color:#6b7280" id="total"></div>
 </div>
@@ -86,7 +86,9 @@ canvas{max-height:260px}
 <script>
 // 美股 Dashboard - 從 Google Sheet 讀取數據
 const SHEET_ID_US = '待設定'; // 美股專用 Sheet ID
-const INITIAL_CAPITAL = 30000;
+const INITIAL_CAPITAL_USD = 3870;
+const INITIAL_CAPITAL_HKD = 30000;
+const EXCHANGE_RATE = 7.75;
 let chart = null;
 
 // 靜態數據（初期）- 之後改為 API
