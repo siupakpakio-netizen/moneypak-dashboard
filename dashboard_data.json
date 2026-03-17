@@ -1,5 +1,5 @@
 {
-  "lastUpdate": "2026-03-17 12:19:58",
+  "lastUpdate": "2026-03-17 15:49:46",
   "cash": 10611.0,
   "positions": [
     {
@@ -7,21 +7,21 @@
       "name": "騰訊",
       "qty": 10,
       "avgCost": 558.5,
-      "currentPrice": 558.5
+      "currentPrice": 550.5
     },
     {
       "code": "01810",
       "name": "小米",
       "qty": 200,
       "avgCost": 35.2,
-      "currentPrice": 35.96
+      "currentPrice": 35.28
     },
     {
       "code": "03690",
       "name": "美團",
       "qty": 80,
       "avgCost": 81.15,
-      "currentPrice": 81.3
+      "currentPrice": 79.75
     }
   ],
   "trades": [
@@ -84,6 +84,20 @@
     {
       "time": "12:19",
       "value": 29892.0
+    },
+    {
+      "time": "12:24",
+      "value": 29892,
+      "pnl": -108
+    },
+    {
+      "time": "12:25",
+      "value": 29892,
+      "pnl": -108
+    },
+    {
+      "time": "15:49",
+      "value": 29552.0
     }
   ]
 }
