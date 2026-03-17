@@ -1,29 +1,15 @@
 {
-  "timestamp": "2026-03-17T19:23:32+08:00",
-  "btc_price": 74003.2,
-  "btc_change_pct": 0.39,
-  "btc_rsi": 62.21,
-  "sol_price": 93.76,
-  "sol_change_pct": -0.05,
+  "timestamp": "2026-03-17T19:25:08+08:00",
+  "total_usd": 3856.84,
+  "total_hkd": 29891,
+  "cash_usd": 1623.03,
   "positions": [
-    {
-      "coin": "BTC",
-      "qty": 0.015,
-      "cost": 74254.0,
-      "current": 74003.2,
-      "pnl": -3.76,
-      "pnl_pct": -0.3
-    },
-    {
-      "coin": "SOL",
-      "qty": 12.0,
-      "cost": 94.43,
-      "current": 93.76,
-      "pnl": -8.04,
-      "pnl_pct": -0.7
-    }
+    {"coin": "BTC", "amount": 0.015, "cost": 74254.00, "price": 73968.05, "value": 1109.52, "pnl": -4.29, "pnl_pct": -0.4},
+    {"coin": "SOL", "amount": 12.0, "cost": 94.43, "price": 93.69, "value": 1124.29, "pnl": -8.87, "pnl_pct": -0.8}
   ],
-  "cash": 1623.03,
-  "total_value": 3858.2,
-  "action": "\u6301\u6709 \u2014 \u7b49BTC 4,745(+1%)/2,026(-3%)\uff0cSOL 5.37(+1%)/1.60(-3%)\u89f8\u767c\u64cd\u4f5c"
+  "indicators": {
+    "btc_rsi": 62.21,
+    "btc_change_pct": 0.47,
+    "sol_change_pct": -0.09
+  }
 }
