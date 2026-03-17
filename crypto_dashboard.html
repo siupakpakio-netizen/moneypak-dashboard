@@ -87,36 +87,74 @@ canvas{max-height:260px}
 
 <script>
 const DATA = {
-  "lastUpdate": "2026-03-17 15:49:47",
-  "cash": 3870.0,
+  "lastUpdate": "2026-03-17 16:06:34",
+  "cash": 1623.03,
   "coins": [
     {
       "symbol": "BTC",
       "name": "Bitcoin",
       "color": "#f7931a",
-      "price": 74355.02,
-      "change": -516.28,
-      "changePct": -0.69
+      "price": 74425.59,
+      "change": -445.71,
+      "changePct": -0.6
     },
     {
       "symbol": "ETH",
       "name": "Ethereum",
       "color": "#627eea",
-      "price": 2329.56,
-      "change": -22.07,
-      "changePct": -0.94
+      "price": 2332.85,
+      "change": -18.77,
+      "changePct": -0.8
     },
     {
       "symbol": "SOL",
       "name": "Solana",
       "color": "#00ffa3",
-      "price": 94.5,
-      "change": -1.71,
-      "changePct": -1.78
+      "price": 94.76,
+      "change": -1.45,
+      "changePct": -1.51
     }
   ],
-  "positions": [],
-  "trades": [],
+  "positions": [
+    {
+      "symbol": "BTC",
+      "qty": 0.015,
+      "avgPrice": 74254.0,
+      "currentPrice": 74425.59,
+      "marketValue": 1116.38,
+      "pnl": 2.57,
+      "pnlPct": 0.23
+    },
+    {
+      "symbol": "SOL",
+      "qty": 12.0,
+      "avgPrice": 94.43,
+      "currentPrice": 94.76,
+      "marketValue": 1137.12,
+      "pnl": 3.96,
+      "pnlPct": 0.35
+    }
+  ],
+  "trades": [
+    {
+      "time": "16:03:46",
+      "action": "BUY",
+      "symbol": "BTC",
+      "price": 74254.0,
+      "qty": 0.015,
+      "amount": 1113.81,
+      "pnl": null
+    },
+    {
+      "time": "16:04:52",
+      "action": "BUY",
+      "symbol": "SOL",
+      "price": 94.43,
+      "qty": 12.0,
+      "amount": 1133.16,
+      "pnl": null
+    }
+  ],
   "history": [
     {
       "time": "14:26",
@@ -142,6 +180,11 @@ const DATA = {
       "time": "15:49",
       "value": 3870.0,
       "pnl": 0.0
+    },
+    {
+      "time": "16:06",
+      "value": 3876.53,
+      "pnl": 6.53
     }
   ]
 };
