@@ -1,0 +1,114 @@
+// ═══════════════════════════════════════════
+// MoneyPak Alpha Channel — 港股版
+// 適用：港股所有股票 + 恒指期貨
+// ═══════════════════════════════════════════
+//@version=5
+indicator("MoneyPak Alpha [港股]", overlay=true, max_labels_count=500)
+
+// ── 港股參數（調整過適合港股特性）──
+rsi_len = input.int(14, "RSI 週期")
+rsi_os = input.int(28, "RSI 超賣（港股偏高）")     // 港股超賣線調高
+rsi_ob = input.int(72, "RSI 超買（港股偏高）")
+macd_fast = input.int(12, "MACD 快線")
+macd_slow = input.int(26, "MACD 慢線")
+macd_sig = input.int(9, "MACD 信號線")
+sma_short = input.int(20, "SMA 短期")
+sma_mid = input.int(50, "SMA 中期")
+sma_long = input.int(250, "SMA 長期（港股年線250日）")  // 港股用250日
+bb_len = input.int(20, "布林帶週期")
+bb_mult = input.float(2.0, "布林帶倍數")
+vol_len = input.int(20, "量均線")
+vol_mult = input.float(1.3, "放量倍數（港股較低）")    // 港股成交較淡
+
+// ── 計算 ──
+rsi = ta.rsi(close, rsi_len)
+[macd_l, sig_l, hist] = ta.macd(close, macd_fast, macd_slow, macd_sig)
+sma20 = ta.sma(close, sma_short)
+sma50 = ta.sma(close, sma_mid)
+sma250 = ta.sma(close, sma_long)
+[bb_mid, bb_up, bb_dn] = ta.bb(close, bb_len, bb_mult)
+vol_sma = ta.sma(volume, vol_len)
+vol_r = volume / vol_sma
+
+// ── 綜合評分（港股權重）──
+score = 0.0
+// RSI（權重 25%）
+score += rsi < 20 ? 3.0 : rsi < rsi_os ? 2.0 : rsi > 80 ? -3.0 : rsi > rsi_ob ? -2.0 : 0.0
+// MACD（權重 20%）
+score += macd_l > sig_l ? 1.0 : -1.0
+// 均線（權重 30%）— 港股重視趨勢
+score += close > sma20 and sma20 > sma50 ? 2.5 : close < sma20 and sma20 < sma50 ? -2.5 : 0.0
+score += close > sma250 ? 1.0 : -1.0
+// 布林帶（權重 15%）
+score += close < bb_dn ? 1.5 : close > bb_up ? -1.5 : 0.0
+// 成交量（權重 10%）
+score += vol_r > vol_mult and score > 0 ? 1.0 : 0.0
+
+// ── 信號 ──
+buy = score >= 4.5 and not (score >= 4.5)[1]
+sell = score <= -3.0 and not (score <= -3.0)[1]
+strong_buy = score >= 6.5 and not (score >= 6.5)[1]
+strong_sell = score <= -5.0 and not (score <= -5.0)[1]
+
+// ── 畫圖 ──
+p1 = plot(bb_up, "BB上", color=color.new(color.gray, 75))
+p2 = plot(bb_dn, "BB下", color=color.new(color.gray, 75))
+fill(p1, p2, color=color.new(color.blue, 92), title="通道")
+plot(sma20, "SMA20", color=color.new(color.blue, 30), linewidth=1)
+plot(sma50, "SMA50", color=color.new(color.orange, 20), linewidth=1)
+plot(sma250, "SMA250", color=color.new(color.purple, 0), linewidth=2)
+
+plotshape(buy, "買", shape.triangleup, location.belowbar, color.green, size=size.normal)
+plotshape(sell, "賣", shape.triangledown, location.abovebar, color.red, size=size.normal)
+plotshape(strong_buy, "強買", shape.diamond, location.belowbar, color.lime, size=size.large)
+plotshape(strong_sell, "強賣", shape.diamond, location.abovebar, color.maroon, size=size.large)
+
+// 止損止盈線
+var float ep = na
+var float sl = na
+var float tp = na
+if buy
+    ep := close
+    sl := close * 0.95
+    tp := close * 1.10
+if sell
+    ep := na
+    sl := na
+    tp := na
+plot(ep, "入場", color=color.new(color.yellow, 60), style=plot.style_linebr)
+plot(sl, "止損", color=color.new(color.red, 40), style=plot.style_circles, linewidth=2)
+plot(tp, "止盈", color=color.new(color.green, 40), style=plot.style_circles, linewidth=2)
+
+// ── 面板 ──
+var table pnl = table.new(position.top_right, 2, 9, bgcolor=color.new(#0d1117, 10), border_width=1)
+if barstate.islast
+    table.cell(pnl,0,0,"📊 港股評分",text_color=color.white,text_size=size.small)
+    table.cell(pnl,1,0,str.tostring(score,"#.#")+"/10",text_color=score>0?color.green:color.red,text_size=size.small)
+    table.cell(pnl,0,1,"RSI",text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,1,1,str.tostring(rsi,"#"),text_color=rsi<rsi_os?color.green:rsi>rsi_ob?color.red:color.gray,text_size=size.tiny)
+    table.cell(pnl,0,2,"MACD",text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,1,2,macd_l>sig_l?"金叉🟢":"死叉🔴",text_color=macd_l>sig_l?color.green:color.red,text_size=size.tiny)
+    table.cell(pnl,0,3,"趨勢",text_color=color.white,text_size=size.tiny)
+    t = close>sma20>sma50?"多頭🟢":close<sma20<sma50?"空頭🔴":"震盪⚪"
+    table.cell(pnl,1,3,t,text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,0,4,"位置",text_color=color.white,text_size=size.tiny)
+    b = close<bb_dn?"超賣🟢":close>bb_up?"超買🔴":"正常"
+    table.cell(pnl,1,4,b,text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,0,5,"量比",text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,1,5,str.tostring(vol_r,"#.#")+"x",text_color=vol_r>1.3?color.green:color.gray,text_size=size.tiny)
+    sg = strong_buy?"💎強買":buy?"🟢買入":strong_sell?"🚨強賣":sell?"🔴賣出":"⚪觀望"
+    table.cell(pnl,0,6,"信號",text_color=color.white,text_size=size.small)
+    table.cell(pnl,1,6,sg,text_color=score>3?color.green:score<-2?color.red:color.gray,text_size=size.small)
+    if not na(ep)
+        table.cell(pnl,0,7,"SL/TP",text_color=color.white,text_size=size.tiny)
+        table.cell(pnl,1,7,str.tostring(sl,"#.##")+"/"+str.tostring(tp,"#.##"),text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,0,8,"市場",text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,1,8,"🇭🇰 港股",text_color=color.yellow,text_size=size.tiny)
+
+// ── Alert ──
+alertcondition(buy,"買入","🟢 港股買入 {{ticker}} @ {{close}} 評分:"+str.tostring(score))
+alertcondition(sell,"賣出","🔴 港股賣出 {{ticker}} @ {{close}} 評分:"+str.tostring(score))
+alertcondition(strong_buy,"強買","💎 強烈買入 {{ticker}}!")
+alertcondition(strong_sell,"強賣","🚨 強烈賣出 {{ticker}}!")
+alertcondition(buy,"Webhook-BUY",'{"action":"BUY","market":"HK","ticker":"{{ticker}}","price":{{close}},"score":'+str.tostring(score)+'}')
+alertcondition(sell,"Webhook-SELL",'{"action":"SELL","market":"HK","ticker":"{{ticker}}","price":{{close}},"score":'+str.tostring(score)+'}')

@@ -1,0 +1,125 @@
+// ═══════════════════════════════════════════
+// MoneyPak Alpha Channel — 美股版
+// 適用：NASDAQ / NYSE 所有股票 + ETF
+// ═══════════════════════════════════════════
+//@version=5
+indicator("MoneyPak Alpha [美股]", overlay=true, max_labels_count=500)
+
+// ── 美股參數（調整過適合美股特性）──
+rsi_len = input.int(14, "RSI 週期")
+rsi_os = input.int(30, "RSI 超賣")
+rsi_ob = input.int(70, "RSI 超買")
+macd_fast = input.int(12, "MACD 快線")
+macd_slow = input.int(26, "MACD 慢線")
+macd_sig = input.int(9, "MACD 信號線")
+sma_short = input.int(20, "SMA 短期")
+sma_mid = input.int(50, "SMA 中期")
+sma_long = input.int(200, "SMA 長期（美股標準200日）")
+bb_len = input.int(20, "布林帶週期")
+bb_mult = input.float(2.0, "布林帶倍數")
+vol_len = input.int(20, "量均線")
+vol_mult = input.float(1.5, "放量倍數")
+atr_len = input.int(14, "ATR 週期（止損用）")
+
+// ── 計算 ──
+rsi = ta.rsi(close, rsi_len)
+[macd_l, sig_l, hist] = ta.macd(close, macd_fast, macd_slow, macd_sig)
+sma20 = ta.sma(close, sma_short)
+sma50 = ta.sma(close, sma_mid)
+sma200 = ta.sma(close, sma_long)
+[bb_mid, bb_up, bb_dn] = ta.bb(close, bb_len, bb_mult)
+vol_sma = ta.sma(volume, vol_len)
+vol_r = volume / vol_sma
+atr = ta.atr(atr_len)
+
+// ── 綜合評分（美股权重）──
+score = 0.0
+// RSI
+score += rsi < 20 ? 3.0 : rsi < rsi_os ? 2.0 : rsi > 80 ? -3.0 : rsi > rsi_ob ? -2.0 : 0.0
+// MACD
+score += macd_l > sig_l ? 1.0 : -1.0
+score += hist > hist[1] ? 0.5 : -0.5
+// 均線
+score += close > sma20 and sma20 > sma50 ? 2.5 : close < sma20 and sma20 < sma50 ? -2.5 : 0.0
+score += close > sma200 ? 1.0 : -1.0
+// 布林帶
+score += close < bb_dn ? 2.0 : close > bb_up ? -2.0 : 0.0
+// 成交量
+score += vol_r > vol_mult and score > 0 ? 1.5 : vol_r < 0.5 and score > 0 ? -1.0 : 0.0
+
+// ── 美股額外規則 ──
+// 避開開市首15分鐘波動
+in_open = ta.change(time("1")) != 0 ? false : (time - time("1")) < 900000
+// 避開收市前5分鐘
+in_close = (time("1") + 23400000 - time) < 300000
+
+// ── 信號 ──
+buy = score >= 4.5 and not (score >= 4.5)[1] and not in_open and not in_close
+sell = score <= -3.0 and not (score <= -3.0)[1]
+strong_buy = score >= 6.5 and not (score >= 6.5)[1]
+strong_sell = score <= -5.0 and not (score <= -5.0)[1]
+
+// ── 畫圖 ──
+p1 = plot(bb_up, "BB上", color=color.new(color.gray, 75))
+p2 = plot(bb_dn, "BB下", color=color.new(color.gray, 75))
+fill(p1, p2, color=color.new(color.blue, 92), title="BB通道")
+plot(sma20, "SMA20", color=color.new(color.blue, 30), linewidth=1)
+plot(sma50, "SMA50", color=color.new(color.orange, 20), linewidth=1)
+plot(sma200, "SMA200", color=color.new(color.purple, 0), linewidth=2)
+
+plotshape(buy, "Buy", shape.triangleup, location.belowbar, color.green, size=size.normal)
+plotshape(sell, "Sell", shape.triangledown, location.abovebar, color.red, size=size.normal)
+plotshape(strong_buy, "StrongBuy", shape.diamond, location.belowbar, color.lime, size=size.large)
+plotshape(strong_sell, "StrongSell", shape.diamond, location.abovebar, color.maroon, size=size.large)
+
+// ATR止損（美股用ATR更動態）
+var float ep = na
+var float sl = na
+var float tp = na
+if buy
+    ep := close
+    sl := close - atr * 1.5    // ATR 1.5倍止損
+    tp := close + atr * 3.0    // ATR 3倍止盈（2:1風報比）
+if sell
+    ep := na
+    sl := na
+    tp := na
+plot(ep, "Entry", color=color.new(color.yellow, 60), style=plot.style_linebr)
+plot(sl, "StopLoss", color=color.new(color.red, 40), style=plot.style_circles, linewidth=2)
+plot(tp, "TakeProfit", color=color.new(color.green, 40), style=plot.style_circles, linewidth=2)
+
+// ── 面板 ──
+var table pnl = table.new(position.top_right, 2, 10, bgcolor=color.new(#0a0e17, 10), border_width=1)
+if barstate.islast
+    table.cell(pnl,0,0,"📊 美股評分",text_color=color.white,text_size=size.small)
+    table.cell(pnl,1,0,str.tostring(score,"#.#")+"/10",text_color=score>0?color.green:color.red,text_size=size.small)
+    table.cell(pnl,0,1,"RSI",text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,1,1,str.tostring(rsi,"#"),text_color=rsi<30?color.green:rsi>70?color.red:color.gray,text_size=size.tiny)
+    table.cell(pnl,0,2,"MACD",text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,1,2,macd_l>sig_l?"Golden🟢":"Death🔴",text_color=macd_l>sig_l?color.green:color.red,text_size=size.tiny)
+    table.cell(pnl,0,3,"Trend",text_color=color.white,text_size=size.tiny)
+    t = close>sma20>sma50?"Bull🟢":close<sma20<sma50?"Bear🔴":"Range⚪"
+    table.cell(pnl,1,3,t,text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,0,4,"BB",text_color=color.white,text_size=size.tiny)
+    b = close<bb_dn?"Oversold🟢":close>bb_up?"Overbought🔴":"Normal"
+    table.cell(pnl,1,4,b,text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,0,5,"Vol",text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,1,5,str.tostring(vol_r,"#.#")+"x",text_color=vol_r>1.5?color.green:color.gray,text_size=size.tiny)
+    table.cell(pnl,0,6,"ATR",text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,1,6,str.tostring(atr,"#.##"),text_color=color.white,text_size=size.tiny)
+    sg = strong_buy?"💎STRONG BUY":buy?"🟢BUY":strong_sell?"🚨STRONG SELL":sell?"🔴SELL":"⚪HOLD"
+    table.cell(pnl,0,7,"Signal",text_color=color.white,text_size=size.small)
+    table.cell(pnl,1,7,sg,text_color=score>3?color.green:score<-2?color.red:color.gray,text_size=size.small)
+    if not na(ep)
+        table.cell(pnl,0,8,"SL/TP",text_color=color.white,text_size=size.tiny)
+        table.cell(pnl,1,8,str.tostring(sl,"#.##")+"/"+str.tostring(tp,"#.##"),text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,0,9,"Market",text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,1,9,"🇺🇸 US",text_color=color.yellow,text_size=size.tiny)
+
+// ── Alert ──
+alertcondition(buy,"Buy","🟢 US BUY {{ticker}} @ {{close}} Score:"+str.tostring(score))
+alertcondition(sell,"Sell","🔴 US SELL {{ticker}} @ {{close}} Score:"+str.tostring(score))
+alertcondition(strong_buy,"StrongBuy","💎 STRONG BUY {{ticker}}!")
+alertcondition(strong_sell,"StrongSell","🚨 STRONG SELL {{ticker}}!")
+alertcondition(buy,"Webhook-BUY",'{"action":"BUY","market":"US","ticker":"{{ticker}}","price":{{close}},"score":'+str.tostring(score)+',"atr":'+str.tostring(atr)+'}')
+alertcondition(sell,"Webhook-SELL",'{"action":"SELL","market":"US","ticker":"{{ticker}}","price":{{close}},"score":'+str.tostring(score)+',"atr":'+str.tostring(atr)+'}')
