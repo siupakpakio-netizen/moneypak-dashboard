@@ -1,0 +1,127 @@
+// ═══════════════════════════════════════════
+// MoneyPak Alpha Channel — Crypto 版
+// 適用：BTC / ETH / SOL 等主流加密貨幣
+// 24/7 市場，無開收市
+// ═══════════════════════════════════════════
+//@version=5
+indicator("MoneyPak Alpha [Crypto]", overlay=true, max_labels_count=500)
+
+// ── Crypto 參數（波動大，調整參數）──
+rsi_len = input.int(14, "RSI 週期")
+rsi_os = input.int(25, "RSI 超賣（Crypto較低）")     // Crypto波動大，超賣線調低
+rsi_ob = input.int(75, "RSI 超買（Crypto較高）")
+macd_fast = input.int(12, "MACD 快線")
+macd_slow = input.int(26, "MACD 慢線")
+macd_sig = input.int(9, "MACD 信號線")
+ema_short = input.int(20, "EMA 短期（Crypto用EMA）")  // Crypto用EMA比SMA靈敏
+ema_mid = input.int(50, "EMA 中期")
+ema_long = input.int(200, "EMA 長期")
+bb_len = input.int(20, "布林帶週期")
+bb_mult = input.float(2.5, "布林帶倍數（Crypto放大）") // Crypto波幅大
+vol_len = input.int(20, "量均線")
+vol_mult = input.float(1.8, "放量倍數")
+
+// ── 計算 ──
+rsi = ta.rsi(close, rsi_len)
+[macd_l, sig_l, hist] = ta.macd(close, macd_fast, macd_slow, macd_sig)
+ema20 = ta.ema(close, ema_short)    // Crypto用EMA
+ema50 = ta.ema(close, ema_mid)
+ema200 = ta.ema(close, ema_long)
+[bb_mid, bb_up, bb_dn] = ta.bb(close, bb_len, bb_mult)
+vol_sma = ta.sma(volume, vol_len)
+vol_r = volume / vol_sma
+atr = ta.atr(14)
+
+// ── Crypto 特有指標 ──
+// 波動率（24h ATR / Price）
+volatility = atr / close * 100
+// 資金流量指標
+mfi = ta.mfi(14)
+
+// ── 綜合評分（Crypto權重）──
+score = 0.0
+// RSI（權重 20%）
+score += rsi < 15 ? 3.0 : rsi < rsi_os ? 2.0 : rsi > 85 ? -3.0 : rsi > rsi_ob ? -2.0 : 0.0
+// MACD（權重 25%）— Crypto MACD 較準
+score += macd_l > sig_l ? 1.5 : -1.5
+score += hist > hist[1] ? 0.5 : -0.5
+// 均線（權重 25%）
+score += close > ema20 and ema20 > ema50 ? 2.0 : close < ema20 and ema20 < ema50 ? -2.0 : 0.0
+score += close > ema200 ? 1.0 : -1.0
+// 布林帶（權重 15%）
+score += close < bb_dn ? 1.5 : close > bb_up ? -1.5 : 0.0
+// 成交量（權重 10%）
+score += vol_r > vol_mult and score > 0 ? 1.0 : 0.0
+// MFI 資金流（權重 5%）
+score += mfi < 20 ? 0.5 : mfi > 80 ? -0.5 : 0.0
+
+// ── 信號（Crypto門檻較高，避免假突破）──
+buy = score >= 5.5 and not (score >= 5.5)[1]
+sell = score <= -3.5 and not (score <= -3.5)[1]
+strong_buy = score >= 7.5 and not (score >= 7.5)[1]
+strong_sell = score <= -5.5 and not (score <= -5.5)[1]
+
+// ── 畫圖 ──
+p1 = plot(bb_up, "BB上", color=color.new(color.gray, 75))
+p2 = plot(bb_dn, "BB下", color=color.new(color.gray, 75))
+fill(p1, p2, color=color.new(color.orange, 93), title="BB通道")
+plot(ema20, "EMA20", color=color.new(color.blue, 30), linewidth=1)
+plot(ema50, "EMA50", color=color.new(color.orange, 20), linewidth=1)
+plot(ema200, "EMA200", color=color.new(color.purple, 0), linewidth=2)
+
+plotshape(buy, "Buy", shape.triangleup, location.belowbar, color.green, size=size.normal)
+plotshape(sell, "Sell", shape.triangledown, location.abovebar, color.red, size=size.normal)
+plotshape(strong_buy, "StrongBuy", shape.diamond, location.belowbar, color.lime, size=size.large)
+plotshape(strong_sell, "StrongSell", shape.diamond, location.abovebar, color.maroon, size=size.large)
+
+// 止損止盈（用ATR，Crypto適合）
+var float ep = na
+var float sl = na
+var float tp = na
+if buy
+    ep := close
+    sl := close - atr * 2.0    // Crypto止損較寬
+    tp := close + atr * 4.0    // 2:1風報比
+if sell
+    ep := na
+    sl := na
+    tp := na
+plot(ep, "入場", color=color.new(color.yellow, 60), style=plot.style_linebr)
+plot(sl, "止損", color=color.new(color.red, 30), style=plot.style_circles, linewidth=2)
+plot(tp, "止盈", color=color.new(color.green, 30), style=plot.style_circles, linewidth=2)
+
+// ── 面板 ──
+var table pnl = table.new(position.top_right, 2, 10, bgcolor=color.new(#0a0e17, 10), border_width=1)
+if barstate.islast
+    table.cell(pnl,0,0,"🪙 Crypto 評分",text_color=color.white,text_size=size.small)
+    table.cell(pnl,1,0,str.tostring(score,"#.#")+"/10",text_color=score>0?color.green:color.red,text_size=size.small)
+    table.cell(pnl,0,1,"RSI",text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,1,1,str.tostring(rsi,"#"),text_color=rsi<25?color.green:rsi>75?color.red:color.gray,text_size=size.tiny)
+    table.cell(pnl,0,2,"MACD",text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,1,2,macd_l>sig_l?"金叉🟢":"死叉🔴",text_color=macd_l>sig_l?color.green:color.red,text_size=size.tiny)
+    table.cell(pnl,0,3,"趨勢",text_color=color.white,text_size=size.tiny)
+    t = close>ema20>ema50?"多頭🟢":close<ema20<ema50?"空頭🔴":"震盪⚪"
+    table.cell(pnl,1,3,t,text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,0,4,"BB",text_color=color.white,text_size=size.tiny)
+    b = close<bb_dn?"超賣🟢":close>bb_up?"超買🔴":"正常"
+    table.cell(pnl,1,4,b,text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,0,5,"波動率",text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,1,5,str.tostring(volatility,"#.#")+"%",text_color=volatility>5?color.red:color.green,text_size=size.tiny)
+    table.cell(pnl,0,6,"MFI",text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,1,6,str.tostring(mfi,"#"),text_color=mfi<20?color.green:mfi>80?color.red:color.gray,text_size=size.tiny)
+    sg = strong_buy?"💎STRONG BUY":buy?"🟢BUY":strong_sell?"🚨STRONG SELL":sell?"🔴SELL":"⚪HOLD"
+    table.cell(pnl,0,7,"信號",text_color=color.white,text_size=size.small)
+    table.cell(pnl,1,7,sg,text_color=score>4?color.green:score<-3?color.red:color.gray,text_size=size.small)
+    if not na(ep)
+        table.cell(pnl,0,8,"SL/TP",text_color=color.white,text_size=size.tiny)
+        table.cell(pnl,1,8,str.tostring(sl,"#.#")+"/"+str.tostring(tp,"#.#"),text_color=color.white,text_size=size.tiny)
+    table.cell(pnl,0,9,"市場",text_color=color.yellow,text_size=size.tiny)
+    table.cell(pnl,1,9,"🪙 24/7",text_color=color.yellow,text_size=size.tiny)
+
+// ── Alert ──
+alertcondition(buy,"Buy","🟢 Crypto BUY {{ticker}} @ {{close}} Score:"+str.tostring(score))
+alertcondition(sell,"Sell","🔴 Crypto SELL {{ticker}} @ {{close}} Score:"+str.tostring(score))
+alertcondition(strong_buy,"StrongBuy","💎 {{ticker}} STRONG BUY!")
+alertcondition(strong_sell,"StrongSell","🚨 {{ticker}} STRONG SELL!")
+alertcondition(buy,"Webhook-BUY",'{"action":"BUY","market":"CRYPTO","ticker":"{{ticker}}","price":{{close}},"score":'+str.tostring(score)+',"atr":'+str.tostring(atr)+'}')
+alertcondition(sell,"Webhook-SELL",'{"action":"SELL","market":"CRYPTO","ticker":"{{ticker}}","price":{{close}},"score":'+str.tostring(score)+',"atr":'+str.tostring(atr)+'}')

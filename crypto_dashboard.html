@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🪙 MoneyPak Crypto Trading</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:#0c0c1d;color:#e0e0e0;padding:16px}
+.hdr{text-align:center;padding:20px;background:linear-gradient(135deg,#1a1a2e,#0c0c1d);border-radius:16px;margin-bottom:16px;border:1px solid #2d2d44}
+.hdr h1{font-size:24px;background:linear-gradient(90deg,#f7931a,#627eea,#00ffa3);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hdr .sub{color:#6b7280;margin-top:4px;font-size:13px}
+.pnl{font-size:38px;font-weight:bold;margin:10px 0}
+.pnl.up{color:#10b981}.pnl.down{color:#ef4444}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.card{background:#1a1a2e;border:1px solid #2d2d44;border-radius:12px;padding:14px;text-align:center}
+.card .lbl{color:#6b7280;font-size:10px;text-transform:uppercase;letter-spacing:1px}
+.card .val{font-size:20px;font-weight:bold;color:#f9fafb;margin-top:3px}
+.card .chg{font-size:12px;margin-top:2px}
+.up{color:#10b981}.down{color:#ef4444}
+.box{background:#1a1a2e;border:1px solid #2d2d44;border-radius:12px;padding:16px;margin-bottom:16px}
+.box h3{color:#f7931a;margin-bottom:10px;font-size:15px}
+canvas{max-height:260px}
+.coin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.coin-card{background:#1a1a2e;border:1px solid #2d2d44;border-radius:12px;padding:16px;text-align:center}
+.coin-card .symbol{font-size:18px;font-weight:bold;color:#fff}
+.coin-card .price{font-size:22px;font-weight:bold;margin:8px 0}
+.coin-card .price.btc{color:#f7931a}
+.coin-card .price.eth{color:#627eea}
+.coin-card .price.sol{color:#00ffa3}
+.strat-box{background:#1a1a2e;border:1px solid #2d2d44;border-radius:12px;padding:14px;margin-bottom:12px}
+.strat-box h4{color:#a78bfa;margin-bottom:6px}
+.strat-box .desc{color:#9ca3af;font-size:13px}
+.ft{text-align:center;color:#4b5563;padding:12px;font-size:11px}
+.auto{position:fixed;bottom:12px;right:12px;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:6px 12px;font-size:11px;color:#6b7280;display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;background:#f7931a;border-radius:50%;animation:p 2s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+.nav{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
+.nav a{color:#3b82f6;text-decoration:none;padding:6px 14px;border:1px solid #1f2937;border-radius:8px;font-size:13px}
+.nav a:hover{background:#1f2937}
+.empty{color:#4b5563;text-align:center;padding:16px}
+.trade{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #2d2d44}
+.trade:last-child{border:none}
+.trade .ico{font-size:20px;margin-right:12px}
+.trade .info{flex:1}
+.trade .code{font-weight:600;color:#f9fafb}
+.trade .det{color:#6b7280;font-size:12px}
+</style>
+</head>
+<body>
+<div class="nav">
+  <a href="index.html">🇭🇰 港股</a>
+  <a href="us_dashboard.html">🇺🇸 美股</a>
+  <a href="crypto_dashboard.html" style="background:#2d2d44">🪙 Crypto</a>
+</div>
+<div class="hdr">
+  <h1>🪙 MoneyPak Crypto Trading</h1>
+  <div class="sub">BTC • ETH • SOL | 本金 USD 3,870 (≈HKD 30,000) | 24/7 市場</div>
+  <div class="pnl" id="pnl">載入中...</div>
+  <div style="color:#6b7280" id="total"></div>
+</div>
+
+<div class="coin-grid" id="prices"></div>
+<div class="grid" id="stats"></div>
+
+<div class="box"><h3>🧠 Crypto 交易策略</h3>
+  <div class="strat-box">
+    <h4>📊 趨勢跟蹤（EMA版）</h4>
+    <div class="desc">Crypto用EMA比SMA靈敏，EMA20 > EMA50 > EMA200 確認牛市</div>
+  </div>
+  <div class="strat-box">
+    <h4>💎 動量 + 資金流</h4>
+    <div class="desc">MACD金叉 + RSI強勢 + MFI資金流入確認</div>
+  </div>
+  <div class="strat-box">
+    <h4>🎯 ATR動態止損</h4>
+    <div class="desc">Crypto波動大，用2倍ATR止損、4倍ATR止盈（2:1風報比）</div>
+  </div>
+</div>
+
+<div class="box"><h3>📈 資產走勢</h3><canvas id="chart"></canvas></div>
+<div class="box"><h3>📜 交易紀錄</h3><div id="trades"><div class="empty">暫未開始交易</div></div></div>
+
+<div class="ft">⚠️ 模擬交易僅供參考 | 24/7 每5分鐘自動刷新</div>
+<div class="auto"><span class="dot"></span>刷新 <span id="cd">300</span>s</div>
+
+<script>
+const DATA = {
+  lastUpdate: new Date().toLocaleString('zh-HK',{timeZone:'Asia/Hong_Kong'}),
+  cash: 3870,
+  coins: [
+    {symbol:'BTC',name:'Bitcoin',price:73991.45,cls:'btc'},
+    {symbol:'ETH',name:'Ethereum',price:2306.27,cls:'eth'},
+    {symbol:'SOL',name:'Solana',price:93.81,cls:'sol'}
+  ],
+  positions: [],
+  trades: [],
+  history: [{time:'開戶',value:3870,pnl:0}]
+};
+
+function render(){
+  document.getElementById('date')?.remove();
+  
+  // Prices
+  document.getElementById('prices').innerHTML = DATA.coins.map(c=>`
+    <div class="coin-card">
+      <div class="symbol">${c.symbol}</div>
+      <div class="price ${c.cls}">$${c.price.toLocaleString()}</div>
+      <div style="color:#6b7280;font-size:12px">${c.name}</div>
+    </div>`).join('');
+  
+  // Stats
+  const total = DATA.cash + DATA.positions.reduce((s,p)=>s+p.value,0);
+  const pnl = total - 3870;
+  const pct = (pnl/3870*100).toFixed(2);
+  
+  const pnlEl = document.getElementById('pnl');
+  pnlEl.textContent = (pnl>=0?'+':'')+pnl.toFixed(0)+' USD';
+  pnlEl.className = 'pnl '+(pnl>=0?'up':'down');
+  document.getElementById('total').textContent = '總值: $'+total.toFixed(0)+' (≈HKD '+(total*7.75).toFixed(0)+')';
+  
+  document.getElementById('stats').innerHTML = [
+    stat('💰 現金','$'+DATA.cash.toLocaleString()),
+    stat('📊 總值','$'+total.toFixed(0),(pnl>=0?'+':'')+pct+'%',pnl>=0),
+    stat('📝 交易',DATA.trades.length+' 筆'),
+    stat('💼 持倉',DATA.positions.length+' 隻'),
+    stat('⏰ 狀態','24/7 運行中'),
+  ].join('');
+  
+  // Chart
+  const ctx=document.getElementById('chart').getContext('2d');
+  const vals=DATA.history.map(h=>h.value);
+  const min=Math.min(...vals)-50,max=Math.max(...vals)+50;
+  new Chart(ctx,{
+    type:'line',
+    data:{labels:DATA.history.map(h=>h.time),datasets:[
+      {label:'總資產 (USD)',data:vals,borderColor:'#f7931a',backgroundColor:'rgba(247,147,26,.1)',fill:true,tension:.3,pointRadius:3},
+      {label:'本金',data:Array(vals.length).fill(3870),borderColor:'#374151',borderDash:[5,5],pointRadius:0,fill:false}
+    ]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#9ca3af'}}},
+      scales:{x:{ticks:{color:'#6b7280'},grid:{color:'#2d2d44'}},y:{ticks:{color:'#6b7280',callback:v=>'$'+v.toLocaleString()},grid:{color:'#2d2d44'},min,max}}}
+  });
+  
+  document.getElementById('trades').innerHTML = DATA.trades.length ?
+    [...DATA.trades].reverse().map(t=>`<div class="trade"><div class="ico">${t.action==='BUY'?'🟢':'🔴'}</div><div class="info"><div class="code">${t.time} ${t.action} ${t.symbol}</div><div class="det">${t.qty} @ $${t.price} = $${t.amount}</div></div></div>`).join('') :
+    '<div class="empty">暫未開始交易</div>';
+}
+
+function stat(l,v,s='',u=true){return`<div class="card"><div class="lbl">${l}</div><div class="val">${v}</div>${s?`<div class="chg ${u?'up':'down'}">${s}</div>`:''}</div>`}
+
+let cd=300;
+setInterval(()=>{cd--;if(cd<=0){cd=300;}document.getElementById('cd').textContent=cd;},1000);
+render();
+</script>
+</body>
+</html>
