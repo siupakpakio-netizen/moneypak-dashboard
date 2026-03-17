@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📊 MoneyPak 模擬交易 Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:#0d1117;color:#c9d1d9;padding:16px}
+.hdr{text-align:center;padding:20px;background:linear-gradient(135deg,#1a1f2e,#0d1117);border-radius:16px;margin-bottom:16px;border:1px solid #30363d}
+.hdr h1{font-size:24px;color:#58a6ff}
+.hdr .sub{color:#8b949e;margin-top:4px;font-size:13px}
+.pnl{font-size:38px;font-weight:bold;margin:10px 0}
+.pnl.up{color:#3fb950}.pnl.down{color:#f85149}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:14px;text-align:center}
+.card .lbl{color:#8b949e;font-size:10px;text-transform:uppercase;letter-spacing:1px}
+.card .val{font-size:20px;font-weight:bold;color:#f0f6fc;margin-top:3px}
+.card .chg{font-size:12px;margin-top:2px}
+.up{color:#3fb950}.down{color:#f85149}
+.box{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:16px;margin-bottom:16px}
+.box h3{color:#58a6ff;margin-bottom:10px;font-size:15px}
+canvas{max-height:260px}
+table{width:100%;border-collapse:collapse}
+th{color:#8b949e;font-size:10px;text-transform:uppercase;text-align:left;padding:6px;border-bottom:1px solid #30363d}
+td{padding:8px 6px;border-bottom:1px solid #21262d;font-size:13px}
+.badge{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge.up{background:rgba(63,185,80,.15);color:#3fb950}
+.badge.down{background:rgba(248,81,73,.15);color:#f85149}
+.trade{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #21262d}
+.trade:last-child{border:none}
+.trade .ico{font-size:20px;margin-right:12px}
+.trade .info{flex:1}
+.trade .code{font-weight:600;color:#f0f6fc}
+.trade .det{color:#8b949e;font-size:12px}
+.trade .pnl{font-weight:600;font-size:13px}
+.ft{text-align:center;color:#484f58;padding:12px;font-size:11px}
+.auto{position:fixed;bottom:12px;right:12px;background:#21262d;border:1px solid #30363d;border-radius:8px;padding:6px 12px;font-size:11px;color:#8b949e;display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;background:#3fb950;border-radius:50%;animation:p 2s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+.empty{color:#484f58;text-align:center;padding:16px}
+.loading{text-align:center;padding:40px;color:#8b949e}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <h1>📊 MoneyPak 模擬交易</h1>
+  <div class="sub">港股 | 本金 HKD 30,000 | <span id="date">載入中...</span></div>
+  <div class="pnl" id="pnl">載入中...</div>
+  <div style="color:#8b949e" id="total"></div>
+</div>
+<div class="grid" id="stats"></div>
+<div class="box"><h3>📈 資產走勢</h3><canvas id="chart"></canvas></div>
+<div class="box"><h3>📜 交易紀錄</h3><div id="trades"><div class="loading">載入中...</div></div></div>
+<div class="ft">⚠️ 模擬交易僅供參考 | 每5分鐘自動刷新</div>
+<div class="auto"><span class="dot"></span>刷新 <span id="cd">300</span>s</div>
+
+<script>
+const SHEET_ID = '1xqfcjSPHaHg-4n7k8t0eMmJ6X6eL9sMB6tc04_PUD-8';
+const GIDS = {trades: 0, positions: 1831461076, history: 1139931391, overview: 1429654842};
+let chart = null;
+
+async function fetchSheet(gid) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${gid}`;
+  const r = await fetch(url);
+  const text = await r.text();
+  const json = JSON.parse(text.substring(47, text.length - 2));
+  return json.table;
+}
+
+function parseRows(table) {
+  const cols = table.cols.map(c => c.label);
+  return (table.rows || []).map(row => {
+    const obj = {};
+    row.c.forEach((cell, i) => {
+      obj[cols[i]] = cell ? (cell.f || cell.v) : null;
+    });
+    return obj;
+  });
+}
+
+async function load() {
+  try {
+    // Load trades
+    const tradesTable = await fetchSheet(GIDS.trades);
+    const trades = parseRows(tradesTable);
+    
+    // Load history
+    const histTable = await fetchSheet(GIDS.history);
+    const history = parseRows(histTable);
+    
+    // Calculate from trades
+    let cash = 30000;
+    let positions = {};
+    let realizedPnl = 0;
+    
+    trades.forEach(t => {
+      const action = t['操作'];
+      const code = String(t['股票']).padStart(5, '0');
+      const price = parseFloat(t['價格']) || 0;
+      const qty = parseInt(t['股數']) || 0;
+      const amount = parseFloat(t['金額']) || 0;
+      
+      if (action === '買入') {
+        cash -= amount;
+        if (!positions[code]) positions[code] = {qty: 0, cost: 0};
+        const totalCost = positions[code].cost * positions[code].qty + amount;
+        positions[code].qty += qty;
+        positions[code].cost = totalCost / positions[code].qty;
+      } else if (action === '賣出') {
+        cash += amount;
+        if (positions[code]) {
+          realizedPnl += (price - positions[code].cost) * qty;
+          positions[code].qty -= qty;
+          if (positions[code].qty <= 0) delete positions[code];
+        }
+      }
+    });
+    
+    // Header
+    document.getElementById('date').textContent = new Date().toLocaleDateString('zh-HK', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    
+    // Summary from last history point
+    let totalValue = 30000;
+    let totalPnl = 0;
+    if (history.length > 0) {
+      const last = history[history.length - 1];
+      totalValue = parseFloat(last['總資產']) || 30000;
+      totalPnl = parseFloat(last['盈虧']) || 0;
+    }
+    
+    const pnlEl = document.getElementById('pnl');
+    pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + totalPnl.toLocaleString() + ' HKD';
+    pnlEl.className = 'pnl ' + (totalPnl >= 0 ? 'up' : 'down');
+    document.getElementById('total').textContent = '總值: HKD ' + totalValue.toLocaleString() + ' | ' + (totalPnl >= 0 ? '+' : '') + (totalPnl / 30000 * 100).toFixed(2) + '%';
+    
+    // Stats
+    const winTrades = trades.filter(t => t['操作'] === '賣出').length; // simplified
+    document.getElementById('stats').innerHTML = [
+      statCard('💰 現金', 'HKD ' + cash.toLocaleString()),
+      statCard('📊 總值', 'HKD ' + totalValue.toLocaleString(), (totalPnl>=0?'+':'') + (totalPnl/30000*100).toFixed(2) + '%', totalPnl >= 0),
+      statCard('📝 交易', trades.length + ' 筆'),
+      statCard('💼 持倉', Object.keys(positions).length + ' 隻'),
+      statCard('🔄 更新', new Date().toLocaleTimeString('zh-HK', {hour:'2-digit',minute:'2-digit'})),
+    ].join('');
+    
+    // Trades
+    document.getElementById('trades').innerHTML = trades.length ? [...trades].reverse().slice(0,20).map(t => {
+      const isBuy = t['操作'] === '買入';
+      return `<div class="trade">
+        <div class="ico">${isBuy?'🟢':'🔴'}</div>
+        <div class="info">
+          <div class="code">${t['時間']||''} ${t['操作']} ${t['股票']}</div>
+          <div class="det">x${t['股數']} @ ${t['價格']} = ${parseInt(t['金額']||0).toLocaleString()} HKD</div>
+        </div>
+      </div>`;
+    }).join('') : '<div class="empty">暫無交易</div>';
+    
+    // Chart
+    if (history.length > 0) {
+      const ctx = document.getElementById('chart').getContext('2d');
+      if (chart) chart.destroy();
+      const vals = history.map(h => parseFloat(h['總資產']) || 30000);
+      const min = Math.min(...vals) - 50;
+      const max = Math.max(...vals) + 50;
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: history.map(h => h['時間']),
+          datasets: [{
+            label: '總資產',
+            data: vals,
+            borderColor: '#58a6ff',
+            backgroundColor: 'rgba(88,166,255,.1)',
+            fill: true, tension: .3, pointRadius: 3
+          },{
+            label: '本金線',
+            data: Array(history.length).fill(30000),
+            borderColor: '#484f58', borderDash: [5,5], pointRadius: 0, fill: false
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {legend: {labels: {color: '#c9d1d9'}}},
+          scales: {
+            x: {ticks: {color:'#8b949e'}, grid: {color:'#21262d'}},
+            y: {ticks: {color:'#8b949e', callback: v=>'$'+v.toLocaleString()}, grid: {color:'#21262d'}, min, max}
+          }
+        }
+      });
+    }
+    
+  } catch(e) {
+    console.error(e);
+    document.getElementById('pnl').textContent = '載入失敗，請刷新';
+  }
+}
+
+function statCard(lbl, val, sub='', up=true) {
+  return `<div class="card"><div class="lbl">${lbl}</div><div class="val">${val}</div>${sub?`<div class="chg ${up?'up':'down'}">${sub}</div>`:''}</div>`;
+}
+
+// Auto refresh
+let cd = 300;
+setInterval(() => { cd--; if (cd <= 0) { cd = 300; load(); } document.getElementById('cd').textContent = cd; }, 1000);
+load();
+</script>
+</body>
+</html>

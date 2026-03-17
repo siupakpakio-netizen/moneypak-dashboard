@@ -1,0 +1,89 @@
+{
+  "lastUpdate": "2026-03-17 12:19:58",
+  "cash": 10611.0,
+  "positions": [
+    {
+      "code": "00700",
+      "name": "騰訊",
+      "qty": 10,
+      "avgCost": 558.5,
+      "currentPrice": 558.5
+    },
+    {
+      "code": "01810",
+      "name": "小米",
+      "qty": 200,
+      "avgCost": 35.2,
+      "currentPrice": 35.96
+    },
+    {
+      "code": "03690",
+      "name": "美團",
+      "qty": 80,
+      "avgCost": 81.15,
+      "currentPrice": 81.3
+    }
+  ],
+  "trades": [
+    {
+      "time": "10:01:22",
+      "action": "BUY",
+      "code": "00700",
+      "name": "00700",
+      "price": 558.5,
+      "qty": 10,
+      "amount": 5585.0,
+      "pnl": null
+    },
+    {
+      "time": "10:01:22",
+      "action": "BUY",
+      "code": "01810",
+      "name": "01810",
+      "price": 35.2,
+      "qty": 200,
+      "amount": 7040.000000000001,
+      "pnl": null
+    },
+    {
+      "time": "10:01:22",
+      "action": "BUY",
+      "code": "01347",
+      "name": "01347",
+      "price": 94.5,
+      "qty": 80,
+      "amount": 7560.0,
+      "pnl": null
+    },
+    {
+      "time": "10:01:22",
+      "action": "SELL",
+      "code": "01347",
+      "name": "01347",
+      "price": 91.1,
+      "qty": 80,
+      "amount": 7288.0,
+      "pnl": -272.00000000000045
+    },
+    {
+      "time": "10:03:34",
+      "action": "BUY",
+      "code": "03690",
+      "name": "03690",
+      "price": 81.15,
+      "qty": 80,
+      "amount": 6492.0,
+      "pnl": null
+    }
+  ],
+  "history": [
+    {
+      "time": "12:17",
+      "value": 29892.0
+    },
+    {
+      "time": "12:19",
+      "value": 29892.0
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+name: Update Dashboard
+on:
+  schedule:
+    - cron: '*/5 9-11,13-15 * * 1-5'  # Every 5 min during HK market hours
+  workflow_dispatch: {}
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch data from Google Sheet
+        run: |
+          python3 -c "
+          import json, urllib.request
+          SHEET_ID = '1xqfcjSPHaHg-4n7k8t0eMmJ6X6eL9sMB6tc04_PUD-8'
+          def fetch(gid):
+              url = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:json&gid={gid}'
+              with urllib.request.urlopen(url) as r:
+                  return json.loads(r.read().decode()[47:-2])
+          trades = fetch(0)
+          history = fetch(1139931391)
+          data = {'trades': trades, 'history': history, 'updated': '$(date -u +%Y-%m-%dT%H:%M:%SZ)'}
+          with open('dashboard_data.json','w') as f:
+              json.dump(data, f, indent=2)
+          print('✅ Updated')
+          "
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: \${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
