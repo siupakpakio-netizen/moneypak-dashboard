@@ -1,5 +1,5 @@
 {
-  "lastUpdate": "2026-03-17 17:05:05",
+  "lastUpdate": "2026-03-17 17:05:56",
   "cash": 1623.03,
   "coins": [
     {
@@ -14,17 +14,17 @@
       "symbol": "ETH",
       "name": "Ethereum",
       "color": "#627eea",
-      "price": 2323.07,
-      "change": -28.55,
-      "changePct": -1.21
+      "price": 2323.4,
+      "change": -28.22,
+      "changePct": -1.2
     },
     {
       "symbol": "SOL",
       "name": "Solana",
       "color": "#00ffa3",
-      "price": 94.39,
-      "change": -1.83,
-      "changePct": -1.9
+      "price": 94.41,
+      "change": -1.81,
+      "changePct": -1.88
     }
   ],
   "positions": [
@@ -41,10 +41,10 @@
       "symbol": "SOL",
       "qty": 12.0,
       "avgPrice": 94.43,
-      "currentPrice": 94.39,
-      "marketValue": 1132.68,
-      "pnl": -0.48,
-      "pnlPct": -0.04
+      "currentPrice": 94.41,
+      "marketValue": 1132.92,
+      "pnl": -0.24,
+      "pnlPct": -0.02
     }
   ],
   "trades": [
@@ -229,6 +229,15 @@
       "btc": 1113.64,
       "eth": 0,
       "sol": 1132.68
+    },
+    {
+      "time": "17:05",
+      "value": 3869.59,
+      "pnl": -0.41,
+      "cash": 1623.03,
+      "btc": 1113.64,
+      "eth": 0,
+      "sol": 1132.92
     }
   ]
 }
