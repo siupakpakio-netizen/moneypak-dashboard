@@ -1,0 +1,39 @@
+{
+  "lastUpdate": "2026-03-17 14:26:34",
+  "cash": 3870.0,
+  "coins": [
+    {
+      "symbol": "BTC",
+      "name": "Bitcoin",
+      "color": "#f7931a",
+      "price": 74195.01,
+      "change": -676.29,
+      "changePct": -0.9
+    },
+    {
+      "symbol": "ETH",
+      "name": "Ethereum",
+      "color": "#627eea",
+      "price": 2321.29,
+      "change": -30.34,
+      "changePct": -1.29
+    },
+    {
+      "symbol": "SOL",
+      "name": "Solana",
+      "color": "#00ffa3",
+      "price": 94.15,
+      "change": -2.07,
+      "changePct": -2.15
+    }
+  ],
+  "positions": [],
+  "trades": [],
+  "history": [
+    {
+      "time": "14:26",
+      "value": 3870.0,
+      "pnl": 0.0
+    }
+  ]
+}
