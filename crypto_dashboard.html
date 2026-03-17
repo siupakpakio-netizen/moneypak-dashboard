@@ -87,32 +87,32 @@ canvas{max-height:260px}
 
 <script>
 const DATA = {
-  "lastUpdate": "2026-03-17 16:06:34",
+  "lastUpdate": "2026-03-17 16:14:50",
   "cash": 1623.03,
   "coins": [
     {
       "symbol": "BTC",
       "name": "Bitcoin",
       "color": "#f7931a",
-      "price": 74425.59,
-      "change": -445.71,
-      "changePct": -0.6
+      "price": 74221.86,
+      "change": -649.44,
+      "changePct": -0.87
     },
     {
       "symbol": "ETH",
       "name": "Ethereum",
       "color": "#627eea",
-      "price": 2332.85,
-      "change": -18.77,
-      "changePct": -0.8
+      "price": 2320.67,
+      "change": -30.95,
+      "changePct": -1.32
     },
     {
       "symbol": "SOL",
       "name": "Solana",
       "color": "#00ffa3",
-      "price": 94.76,
-      "change": -1.45,
-      "changePct": -1.51
+      "price": 94.63,
+      "change": -1.59,
+      "changePct": -1.65
     }
   ],
   "positions": [
@@ -120,19 +120,19 @@ const DATA = {
       "symbol": "BTC",
       "qty": 0.015,
       "avgPrice": 74254.0,
-      "currentPrice": 74425.59,
-      "marketValue": 1116.38,
-      "pnl": 2.57,
-      "pnlPct": 0.23
+      "currentPrice": 74221.86,
+      "marketValue": 1113.33,
+      "pnl": -0.48,
+      "pnlPct": -0.04
     },
     {
       "symbol": "SOL",
       "qty": 12.0,
       "avgPrice": 94.43,
-      "currentPrice": 94.76,
-      "marketValue": 1137.12,
-      "pnl": 3.96,
-      "pnlPct": 0.35
+      "currentPrice": 94.63,
+      "marketValue": 1135.56,
+      "pnl": 2.4,
+      "pnlPct": 0.21
     }
   ],
   "trades": [
@@ -185,6 +185,16 @@ const DATA = {
       "time": "16:06",
       "value": 3876.53,
       "pnl": 6.53
+    },
+    {
+      "time": "16:13",
+      "value": 3874.09,
+      "pnl": 4.09
+    },
+    {
+      "time": "16:14",
+      "value": 3871.92,
+      "pnl": 1.92
     }
   ]
 };
@@ -201,12 +211,12 @@ function render(){
     </div>`).join('');
   
   // Stats
-  const total = DATA.cash + DATA.positions.reduce((s,p)=>s+p.value,0);
+  const total = DATA.cash + DATA.positions.reduce((s,p)=>s+p.marketValue,0);
   const pnl = total - 3870;
   const pct = (pnl/3870*100).toFixed(2);
   
   const pnlEl = document.getElementById('pnl');
-  pnlEl.textContent = (pnl>=0?'+':'')+pnl.toFixed(0)+' USD';
+  pnlEl.textContent = (pnl>=0?'+':'')+pnl.toFixed(2)+' USD';
   pnlEl.className = 'pnl '+(pnl>=0?'up':'down');
   document.getElementById('total').textContent = '總值: $'+total.toFixed(0)+' (≈HKD '+(total*7.75).toFixed(0)+')';
   
