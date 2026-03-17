@@ -1,17 +1,17 @@
 {
-  "updated": "2026-03-17T21:16:00+08:00",
-  "btc_price": 73810.94,
-  "btc_change": -0.22,
-  "sol_price": 93.63,
-  "sol_change": -0.09,
+  "updated": "2026-03-17T13:27:51.218Z",
+  "btc_price": 73703.31,
+  "btc_change": -0.30396253,
+  "sol_price": 93.63266,
+  "sol_change": -0.3802787,
   "btc_cost": 74236.12,
   "btc_qty": 0.016,
   "sol_cost": 94.43,
-  "sol_qty": 12.0,
+  "sol_qty": 12,
   "cash": 1549.06,
   "total": 3853.65,
   "total_hkd": 29866,
   "rsi": "N/A",
   "signals": [],
-  "status": "\u7b49\u7dca"
+  "status": "等緊"
 }
