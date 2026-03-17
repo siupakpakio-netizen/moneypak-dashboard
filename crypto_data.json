@@ -1,30 +1,30 @@
 {
-  "lastUpdate": "2026-03-17 16:19:02",
+  "lastUpdate": "2026-03-17 16:36:59",
   "cash": 1623.03,
   "coins": [
     {
       "symbol": "BTC",
       "name": "Bitcoin",
       "color": "#f7931a",
-      "price": 74217.73,
-      "change": -653.57,
-      "changePct": -0.87
+      "price": 74253.48,
+      "change": -617.82,
+      "changePct": -0.83
     },
     {
       "symbol": "ETH",
       "name": "Ethereum",
       "color": "#627eea",
-      "price": 2321.87,
-      "change": -29.75,
-      "changePct": -1.26
+      "price": 2324.71,
+      "change": -26.92,
+      "changePct": -1.14
     },
     {
       "symbol": "SOL",
       "name": "Solana",
       "color": "#00ffa3",
-      "price": 94.48,
-      "change": -1.74,
-      "changePct": -1.81
+      "price": 94.63,
+      "change": -1.58,
+      "changePct": -1.65
     }
   ],
   "positions": [
@@ -32,19 +32,19 @@
       "symbol": "BTC",
       "qty": 0.015,
       "avgPrice": 74254.0,
-      "currentPrice": 74217.73,
-      "marketValue": 1113.27,
-      "pnl": -0.54,
-      "pnlPct": -0.05
+      "currentPrice": 74253.48,
+      "marketValue": 1113.8,
+      "pnl": -0.01,
+      "pnlPct": -0.0
     },
     {
       "symbol": "SOL",
       "qty": 12.0,
       "avgPrice": 94.43,
-      "currentPrice": 94.48,
-      "marketValue": 1133.76,
-      "pnl": 0.6,
-      "pnlPct": 0.05
+      "currentPrice": 94.63,
+      "marketValue": 1135.56,
+      "pnl": 2.4,
+      "pnlPct": 0.21
     }
   ],
   "trades": [
@@ -125,6 +125,15 @@
       "btc": 1113.27,
       "eth": 0,
       "sol": 1133.76
+    },
+    {
+      "time": "16:36",
+      "value": 3872.39,
+      "pnl": 2.39,
+      "cash": 1623.03,
+      "btc": 1113.8,
+      "eth": 0,
+      "sol": 1135.56
     }
   ]
 }
