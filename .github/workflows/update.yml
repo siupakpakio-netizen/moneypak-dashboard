@@ -1,8 +1,12 @@
 name: Update Dashboard
 on:
   schedule:
-    - cron: '*/5 9-11,13-15 * * 1-5'  # Every 5 min during HK market hours
+    - cron: '*/5 9-11,13-15 * * 1-5'  # HK market (Mon-Fri)
+    - cron: '*/5 21,22,23,0,1,2,3 * * 0-4'  # US market (Sun-Thu nights HKT)
   workflow_dispatch: {}
+
+permissions:
+  contents: write
 
 jobs:
   update:
@@ -12,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Fetch data from Google Sheet
+      - name: Fetch HK data from Google Sheet
         run: |
           python3 -c "
           import json, urllib.request
@@ -21,15 +25,19 @@ jobs:
               url = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:json&gid={gid}'
               with urllib.request.urlopen(url) as r:
                   return json.loads(r.read().decode()[47:-2])
-          trades = fetch(0)
-          history = fetch(1139931391)
-          data = {'trades': trades, 'history': history, 'updated': '$(date -u +%Y-%m-%dT%H:%M:%SZ)'}
-          with open('dashboard_data.json','w') as f:
-              json.dump(data, f, indent=2)
-          print('✅ Updated')
+          try:
+              trades = fetch(0)
+              history = fetch(1139931391)
+              data = {'trades': trades, 'history': history}
+              with open('dashboard_data.json','w') as f:
+                  json.dump(data, f)
+              print('✅ HK data updated')
+          except Exception as e:
+              print(f'⚠️ {e}')
           "
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: \${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
+      - name: Commit and deploy
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add -A
+          git diff --staged --quiet || (git commit -m "🔄 Auto-update $(date -u +%Y-%m-%dT%H:%M)" && git push)

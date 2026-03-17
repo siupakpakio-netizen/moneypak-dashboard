@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🇺🇸 MoneyPak 美股模擬交易</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:#0a0e17;color:#c9d1d9;padding:16px}
+.hdr{text-align:center;padding:20px;background:linear-gradient(135deg,#111827,#0a0e17);border-radius:16px;margin-bottom:16px;border:1px solid #1f2937}
+.hdr h1{font-size:24px;color:#3b82f6}
+.hdr .sub{color:#6b7280;margin-top:4px;font-size:13px}
+.pnl{font-size:38px;font-weight:bold;margin:10px 0}
+.pnl.up{color:#10b981}.pnl.down{color:#ef4444}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:14px;text-align:center}
+.card .lbl{color:#6b7280;font-size:10px;text-transform:uppercase;letter-spacing:1px}
+.card .val{font-size:20px;font-weight:bold;color:#f9fafb;margin-top:3px}
+.card .chg{font-size:12px;margin-top:2px}
+.up{color:#10b981}.down{color:#ef4444}
+.box{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:16px;margin-bottom:16px}
+.box h3{color:#3b82f6;margin-bottom:10px;font-size:15px}
+canvas{max-height:260px}
+.strat-box{background:#1a1a2e;border:1px solid #2d2d44;border-radius:12px;padding:14px;margin-bottom:12px}
+.strat-box h4{color:#a78bfa;margin-bottom:6px}
+.strat-box .desc{color:#9ca3af;font-size:13px}
+.strat-box .indicators{color:#60a5fa;font-size:12px;margin-top:4px}
+.trade{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #1f2937}
+.trade:last-child{border:none}
+.trade .ico{font-size:20px;margin-right:12px}
+.trade .info{flex:1}
+.trade .code{font-weight:600;color:#f9fafb}
+.trade .det{color:#6b7280;font-size:12px}
+.ft{text-align:center;color:#4b5563;padding:12px;font-size:11px}
+.auto{position:fixed;bottom:12px;right:12px;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:6px 12px;font-size:11px;color:#6b7280;display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;background:#10b981;border-radius:50%;animation:p 2s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+.empty{color:#4b5563;text-align:center;padding:16px}
+.nav{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
+.nav a{color:#3b82f6;text-decoration:none;padding:6px 14px;border:1px solid #1f2937;border-radius:8px;font-size:13px}
+.nav a:hover{background:#1f2937}
+</style>
+</head>
+<body>
+<div class="nav">
+  <a href="index.html">🇭🇰 港股</a>
+  <a href="us_dashboard.html" style="background:#1f2937">🇺🇸 美股</a>
+</div>
+<div class="hdr">
+  <h1>🇺🇸 MoneyPak 美股模擬交易</h1>
+  <div class="sub">US Market | 本金 USD 30,000 | <span id="date">載入中...</span></div>
+  <div class="pnl" id="pnl">載入中...</div>
+  <div style="color:#6b7280" id="total"></div>
+</div>
+<div class="grid" id="stats"></div>
+
+<div class="box"><h3>🧠 交易策略</h3>
+  <div class="strat-box">
+    <h4>📊 趨勢跟蹤 (Trend Following)</h4>
+    <div class="desc">追蹤強勢股，突破50日線+多頭排列買入</div>
+    <div class="indicators">指標: SMA20/50/200, ADX, MACD | 止損5% | 止盈15%</div>
+  </div>
+  <div class="strat-box">
+    <h4>🚀 動量策略 (Momentum)</h4>
+    <div class="desc">RSI強勢區+MACD金叉+成交量放大確認</div>
+    <div class="indicators">指標: RSI, MACD, Volume | 止損4% | 止盈10%</div>
+  </div>
+  <div class="strat-box">
+    <h4>🔄 均值回歸 (Mean Reversion)</h4>
+    <div class="desc">超賣反彈，BB下軌+RSI<30買入</div>
+    <div class="indicators">指標: RSI, Bollinger Bands, Stochastic | 止損3% | 止盈8%</div>
+  </div>
+  <div class="strat-box">
+    <h4>📰 事件驅動 (Event-Driven)</h4>
+    <div class="desc">業績超預期/分析師升級時買入</div>
+    <div class="indicators">指標: Earnings, News, Analyst Rating | 止損6% | 止盈20%</div>
+  </div>
+</div>
+
+<div class="box"><h3>📈 資產走勢</h3><canvas id="chart"></canvas></div>
+<div class="box"><h3>📜 交易紀錄</h3><div id="trades"><div class="empty">暫未開始交易</div></div></div>
+<div class="ft">⚠️ 模擬交易僅供參考 | 美股時段每5分鐘自動刷新 (21:30-04:00 HKT)</div>
+<div class="auto"><span class="dot"></span>刷新 <span id="cd">300</span>s</div>
+
+<script>
+// 美股 Dashboard - 從 Google Sheet 讀取數據
+const SHEET_ID_US = '待設定'; // 美股專用 Sheet ID
+const INITIAL_CAPITAL = 30000;
+let chart = null;
+
+// 靜態數據（初期）- 之後改為 API
+const DATA = {
+  lastUpdate: new Date().toLocaleString('zh-HK', {timeZone:'Asia/Hong_Kong'}),
+  cash: 30000,
+  positions: [],
+  trades: [],
+  history: [{time: '開戶', value: 30000, pnl: 0}]
+};
+
+function render() {
+  document.getElementById('date').textContent = new Date().toLocaleDateString('zh-HK', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  
+  const total = DATA.cash + DATA.positions.reduce((s,p) => s + (p.currentPrice||p.avgCost||0) * p.qty, 0);
+  const pnl = total - INITIAL_CAPITAL;
+  const pct = (pnl / INITIAL_CAPITAL * 100).toFixed(2);
+  
+  const pnlEl = document.getElementById('pnl');
+  pnlEl.textContent = (pnl>=0?'+':'') + pnl.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',') + ' USD';
+  pnlEl.className = 'pnl ' + (pnl>=0?'up':'down');
+  document.getElementById('total').textContent = '總值: USD ' + total.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  
+  document.getElementById('stats').innerHTML = [
+    statCard('💰 現金', '$' + DATA.cash.toLocaleString()),
+    statCard('📊 總值', '$' + total.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,','), (pnl>=0?'+':'')+pct+'%', pnl>=0),
+    statCard('📝 交易', DATA.trades.length + ' 筆'),
+    statCard('💼 持倉', DATA.positions.length + ' 隻'),
+    statCard('🔄 狀態', '等待開市'),
+  ].join('');
+  
+  document.getElementById('trades').innerHTML = DATA.trades.length ? 
+    [...DATA.trades].reverse().map(t => `
+      <div class="trade">
+        <div class="ico">${t.action==='BUY'?'🟢':'🔴'}</div>
+        <div class="info">
+          <div class="code">${t.time} ${t.action} ${t.ticker}</div>
+          <div class="det">x${t.qty} @ $${t.price} = $${t.amount.toLocaleString()}</div>
+        </div>
+      </div>`).join('') : '<div class="empty">暫未開始交易</div>';
+  
+  // Chart
+  const ctx = document.getElementById('chart').getContext('2d');
+  if (chart) chart.destroy();
+  const vals = DATA.history.map(h => h.value);
+  const min = Math.min(...vals) - 100;
+  const max = Math.max(...vals) + 100;
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: DATA.history.map(h => h.time),
+      datasets: [{
+        label: '總資產 (USD)',
+        data: vals,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,.1)',
+        fill: true, tension: .3, pointRadius: 3
+      },{
+        label: '本金線',
+        data: Array(vals.length).fill(30000),
+        borderColor: '#374151', borderDash: [5,5], pointRadius: 0, fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {legend: {labels: {color: '#9ca3af'}}},
+      scales: {
+        x: {ticks: {color:'#6b7280'}, grid: {color:'#1f2937'}},
+        y: {ticks: {color:'#6b7280', callback: v=>'$'+v.toLocaleString()}, grid: {color:'#1f2937'}, min, max}
+      }
+    }
+  });
+}
+
+function statCard(lbl, val, sub='', up=true) {
+  return `<div class="card"><div class="lbl">${lbl}</div><div class="val">${val}</div>${sub?`<div class="chg ${up?'up':'down'}">${sub}</div>`:''}</div>`;
+}
+
+let cd = 300;
+setInterval(() => { cd--; if(cd<=0){cd=300;} document.getElementById('cd').textContent=cd; }, 1000);
+render();
+</script>
+</body>
+</html>
