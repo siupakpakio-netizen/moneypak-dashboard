@@ -87,32 +87,32 @@ canvas{max-height:260px}
 
 <script>
 const DATA = {
-  "lastUpdate": "2026-03-17 16:36:59",
+  "lastUpdate": "2026-03-17 16:39:09",
   "cash": 1623.03,
   "coins": [
     {
       "symbol": "BTC",
       "name": "Bitcoin",
       "color": "#f7931a",
-      "price": 74253.48,
-      "change": -617.82,
+      "price": 74247.0,
+      "change": -624.3,
       "changePct": -0.83
     },
     {
       "symbol": "ETH",
       "name": "Ethereum",
       "color": "#627eea",
-      "price": 2324.71,
-      "change": -26.92,
-      "changePct": -1.14
+      "price": 2321.84,
+      "change": -29.79,
+      "changePct": -1.27
     },
     {
       "symbol": "SOL",
       "name": "Solana",
       "color": "#00ffa3",
-      "price": 94.63,
-      "change": -1.58,
-      "changePct": -1.65
+      "price": 94.61,
+      "change": -1.6,
+      "changePct": -1.67
     }
   ],
   "positions": [
@@ -120,19 +120,19 @@ const DATA = {
       "symbol": "BTC",
       "qty": 0.015,
       "avgPrice": 74254.0,
-      "currentPrice": 74253.48,
-      "marketValue": 1113.8,
-      "pnl": -0.01,
-      "pnlPct": -0.0
+      "currentPrice": 74247.0,
+      "marketValue": 1113.7,
+      "pnl": -0.1,
+      "pnlPct": -0.01
     },
     {
       "symbol": "SOL",
       "qty": 12.0,
       "avgPrice": 94.43,
-      "currentPrice": 94.63,
-      "marketValue": 1135.56,
-      "pnl": 2.4,
-      "pnlPct": 0.21
+      "currentPrice": 94.61,
+      "marketValue": 1135.32,
+      "pnl": 2.16,
+      "pnlPct": 0.19
     }
   ],
   "trades": [
@@ -159,42 +159,74 @@ const DATA = {
     {
       "time": "14:26",
       "value": 3870.0,
-      "pnl": 0.0
+      "pnl": 0.0,
+      "cash": 1623.03,
+      "btc": 0,
+      "eth": 0,
+      "sol": 0
     },
     {
       "time": "14:35",
       "value": 3870.0,
-      "pnl": 0.0
+      "pnl": 0.0,
+      "cash": 1623.03,
+      "btc": 0,
+      "eth": 0,
+      "sol": 0
     },
     {
       "time": "15:00",
       "value": 3870.0,
-      "pnl": 0.0
+      "pnl": 0.0,
+      "cash": 1623.03,
+      "btc": 0,
+      "eth": 0,
+      "sol": 0
     },
     {
       "time": "15:36",
       "value": 3870.0,
-      "pnl": 0.0
+      "pnl": 0.0,
+      "cash": 1623.03,
+      "btc": 0,
+      "eth": 0,
+      "sol": 0
     },
     {
       "time": "15:49",
       "value": 3870.0,
-      "pnl": 0.0
+      "pnl": 0.0,
+      "cash": 1623.03,
+      "btc": 0,
+      "eth": 0,
+      "sol": 0
     },
     {
       "time": "16:06",
       "value": 3876.53,
-      "pnl": 6.53
+      "pnl": 6.53,
+      "cash": 1623.03,
+      "btc": 1113.25,
+      "eth": 0,
+      "sol": 1133.76
     },
     {
       "time": "16:13",
       "value": 3874.09,
-      "pnl": 4.09
+      "pnl": 4.09,
+      "cash": 1623.03,
+      "btc": 1113.25,
+      "eth": 0,
+      "sol": 1133.76
     },
     {
       "time": "16:14",
       "value": 3871.92,
-      "pnl": 1.92
+      "pnl": 1.92,
+      "cash": 1623.03,
+      "btc": 1113.25,
+      "eth": 0,
+      "sol": 1133.76
     },
     {
       "time": "16:18",
@@ -222,6 +254,15 @@ const DATA = {
       "btc": 1113.8,
       "eth": 0,
       "sol": 1135.56
+    },
+    {
+      "time": "16:39",
+      "value": 3872.05,
+      "pnl": 2.05,
+      "cash": 1623.03,
+      "btc": 1113.7,
+      "eth": 0,
+      "sol": 1135.32
     }
   ]
 };
@@ -279,7 +320,7 @@ function render(){
           data: cashLine,
           backgroundColor: 'rgba(107,114,128,0.3)',
           borderColor: '#6b7280',
-          fill: true,
+          fill: 'origin',
           tension: 0.3,
           pointRadius: 0,
           order: 4,
@@ -289,7 +330,7 @@ function render(){
           data: btcLine,
           backgroundColor: 'rgba(247,147,26,0.4)',
           borderColor: '#f7931a',
-          fill: true,
+          fill: '-1',
           tension: 0.3,
           pointRadius: 0,
           order: 3,
@@ -299,7 +340,7 @@ function render(){
           data: ethLine,
           backgroundColor: 'rgba(98,126,234,0.4)',
           borderColor: '#627eea',
-          fill: true,
+          fill: '-1',
           tension: 0.3,
           pointRadius: 0,
           order: 2,
@@ -309,7 +350,7 @@ function render(){
           data: solLine,
           backgroundColor: 'rgba(0,255,163,0.4)',
           borderColor: '#00ffa3',
-          fill: true,
+          fill: '-1',
           tension: 0.3,
           pointRadius: 0,
           order: 1,
@@ -359,7 +400,7 @@ function render(){
           grid: { color: '#2d2d44' } 
         },
         y: { 
-          stacked: false,
+          stacked: true,
           ticks: { color: '#6b7280', callback: v => '$' + v.toLocaleString() }, 
           grid: { color: '#2d2d44' } 
         }
